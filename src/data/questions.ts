@@ -4,32 +4,43 @@ import { Question } from "../types/quiz";
 export const questions: Question[] = [
   {
     id: 1,
-    text: "What is the capital of France?",
-    options: ["London", "Berlin", "Paris", "Madrid"],
+    text: "Which of the following is the correct way to declare a variable in C#?",
+    options: ["var name = 'John'", "string name = 'John'", "both A and B", "None of the above"],
     correctAnswer: 2
   },
   {
     id: 2,
-    text: "Which planet is known as the Red Planet?",
-    options: ["Venus", "Mars", "Jupiter", "Saturn"],
+    text: "What is the correct syntax for a method declaration in C#?",
+    options: [
+      "public void MyMethod[]",
+      "public void MyMethod()",
+      "void public MyMethod()",
+      "void MyMethod[]"
+    ],
     correctAnswer: 1
   },
   {
     id: 3,
-    text: "What is the largest mammal in the world?",
-    options: ["African Elephant", "Blue Whale", "Giraffe", "Polar Bear"],
-    correctAnswer: 1
+    text: "Which keyword is used to inherit a class in C#?",
+    options: ["extends", "implements", ":", "inherits"],
+    correctAnswer: 2
   },
   {
     id: 4,
-    text: "Who painted the Mona Lisa?",
-    options: ["Vincent van Gogh", "Pablo Picasso", "Leonardo da Vinci", "Michelangelo"],
-    correctAnswer: 2
+    text: "What does the 'using' keyword do in C#?",
+    options: [
+      "Creates a new instance",
+      "Imports namespaces",
+      "Defines a loop",
+      "Declares a variable"
+    ],
+    correctAnswer: 1
   },
   {
     id: 5,
-    text: "Which element has the chemical symbol 'O'?",
-    options: ["Gold", "Silver", "Oxygen", "Iron"],
-    correctAnswer: 2
+    text: "What is the default access modifier in C# if none is specified?",
+    options: ["public", "private", "protected", "internal"],
+    correctAnswer: 1
   }
 ];
+
