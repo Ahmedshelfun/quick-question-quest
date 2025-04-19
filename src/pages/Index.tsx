@@ -1,68 +1,67 @@
 
 import React, { useState, useEffect } from 'react';
 import { questions } from '../data/questions';
-import { QuizState } from '../types/quiz';
 import QuestionCard from '../components/QuestionCard';
 import Results from '../components/Results';
+import { QuizState } from '../types/quiz';
+import { useToast } from '@/components/ui/use-toast';
 
 const Index = () => {
+  const { toast } = useToast();
   const [quizState, setQuizState] = useState<QuizState>({
     currentQuestionIndex: 0,
     score: 0,
     isFinished: false,
-    timeLeft: 30
+    timeLeft: 30,
   });
 
   useEffect(() => {
-    let timer: NodeJS.Timeout;
     if (!quizState.isFinished && quizState.timeLeft > 0) {
-      timer = setTimeout(() => {
-        setQuizState(prev => ({
+      const timer = setInterval(() => {
+        setQuizState((prev) => ({
           ...prev,
-          timeLeft: prev.timeLeft - 1
+          timeLeft: prev.timeLeft - 1,
         }));
       }, 1000);
-    } else if (quizState.timeLeft === 0) {
-      handleTimeUp();
+
+      return () => clearInterval(timer);
     }
-    return () => clearTimeout(timer);
   }, [quizState.timeLeft, quizState.isFinished]);
 
-  const handleAnswer = (selectedAnswerIndex: number) => {
-    const currentQuestion = questions[quizState.currentQuestionIndex];
-    
-    // Check if answer is correct
-    const isCorrect = selectedAnswerIndex === currentQuestion.correctAnswer;
-    
-    setQuizState(prev => {
-      const newScore = isCorrect ? prev.score + 1 : prev.score;
-      const isLastQuestion = prev.currentQuestionIndex === questions.length - 1;
-      
-      return {
-        ...prev,
-        score: newScore,
-        currentQuestionIndex: isLastQuestion 
-          ? prev.currentQuestionIndex 
-          : prev.currentQuestionIndex + 1,
-        isFinished: isLastQuestion,
-        timeLeft: isLastQuestion ? prev.timeLeft : 30
-      };
-    });
-  };
+  useEffect(() => {
+    if (quizState.timeLeft === 0) {
+      handleNextQuestion(-1);
+    }
+  }, [quizState.timeLeft]);
 
-  const handleTimeUp = () => {
-    setQuizState(prev => {
-      const isLastQuestion = prev.currentQuestionIndex === questions.length - 1;
-      
-      return {
+  const handleNextQuestion = (selectedAnswerIndex: number) => {
+    const currentQuestion = questions[quizState.currentQuestionIndex];
+    const isCorrect = selectedAnswerIndex === currentQuestion.correctAnswer;
+
+    if (selectedAnswerIndex !== -1) {
+      toast({
+        title: isCorrect ? "Correct!" : "Incorrect!",
+        description: isCorrect 
+          ? "Well done! Moving to next question." 
+          : `The correct answer was: ${currentQuestion.options[currentQuestion.correctAnswer]}`,
+        variant: isCorrect ? "default" : "destructive",
+      });
+    }
+
+    if (quizState.currentQuestionIndex < questions.length - 1) {
+      setQuizState({
+        currentQuestionIndex: quizState.currentQuestionIndex + 1,
+        score: isCorrect ? quizState.score + 1 : quizState.score,
+        isFinished: false,
+        timeLeft: 30,
+      });
+    } else {
+      setQuizState((prev) => ({
         ...prev,
-        currentQuestionIndex: isLastQuestion 
-          ? prev.currentQuestionIndex 
-          : prev.currentQuestionIndex + 1,
-        isFinished: isLastQuestion,
-        timeLeft: isLastQuestion ? prev.timeLeft : 30
-      };
-    });
+        isFinished: true,
+        score: isCorrect ? prev.score + 1 : prev.score,
+      }));
+    }
   };
 
   const handleRestart = () => {
@@ -70,28 +69,28 @@ const Index = () => {
       currentQuestionIndex: 0,
       score: 0,
       isFinished: false,
-      timeLeft: 30
+      timeLeft: 30,
     });
   };
 
-  if (quizState.isFinished) {
-    return (
-      <Results 
-        score={quizState.score} 
-        totalQuestions={questions.length} 
-        onRestart={handleRestart} 
-      />
-    );
-  }
-
   return (
-    <QuestionCard 
-      question={questions[quizState.currentQuestionIndex]}
-      onAnswer={handleAnswer}
-      timeLeft={quizState.timeLeft}
-      questionNumber={quizState.currentQuestionIndex + 1}
-      totalQuestions={questions.length}
-    />
+    <div className="min-h-screen bg-gradient-to-b from-purple-50 to-white p-4 flex items-center justify-center">
+      {!quizState.isFinished ? (
+        <QuestionCard
+          question={questions[quizState.currentQuestionIndex]}
+          onAnswer={handleNextQuestion}
+          timeLeft={quizState.timeLeft}
+          questionNumber={quizState.currentQuestionIndex + 1}
+          totalQuestions={questions.length}
+        />
+      ) : (
+        <Results
+          score={quizState.score}
+          totalQuestions={questions.length}
+          onRestart={handleRestart}
+        />
+      )}
+    </div>
   );
 };
 

@@ -43,3 +43,4 @@ export const questions: Question[] = [
     correctAnswer: 1
   }
 ];
+
