@@ -1,27 +1,97 @@
 
-import React from 'react';
-import { products } from '../data/products';
-import ProductCard from '../components/ProductCard';
-import CartButton from '../components/CartButton';
-import { CartProvider } from '../context/CartContext';
+import React, { useState, useEffect } from 'react';
+import { questions } from '../data/questions';
+import { QuizState } from '../types/quiz';
+import QuestionCard from '../components/QuestionCard';
+import Results from '../components/Results';
 
 const Index = () => {
+  const [quizState, setQuizState] = useState<QuizState>({
+    currentQuestionIndex: 0,
+    score: 0,
+    isFinished: false,
+    timeLeft: 30
+  });
+
+  useEffect(() => {
+    let timer: NodeJS.Timeout;
+    if (!quizState.isFinished && quizState.timeLeft > 0) {
+      timer = setTimeout(() => {
+        setQuizState(prev => ({
+          ...prev,
+          timeLeft: prev.timeLeft - 1
+        }));
+      }, 1000);
+    } else if (quizState.timeLeft === 0) {
+      handleTimeUp();
+    }
+    return () => clearTimeout(timer);
+  }, [quizState.timeLeft, quizState.isFinished]);
+
+  const handleAnswer = (selectedAnswerIndex: number) => {
+    const currentQuestion = questions[quizState.currentQuestionIndex];
+    
+    // Check if answer is correct
+    const isCorrect = selectedAnswerIndex === currentQuestion.correctAnswer;
+    
+    setQuizState(prev => {
+      const newScore = isCorrect ? prev.score + 1 : prev.score;
+      const isLastQuestion = prev.currentQuestionIndex === questions.length - 1;
+      
+      return {
+        ...prev,
+        score: newScore,
+        currentQuestionIndex: isLastQuestion 
+          ? prev.currentQuestionIndex 
+          : prev.currentQuestionIndex + 1,
+        isFinished: isLastQuestion,
+        timeLeft: isLastQuestion ? prev.timeLeft : 30
+      };
+    });
+  };
+
+  const handleTimeUp = () => {
+    setQuizState(prev => {
+      const isLastQuestion = prev.currentQuestionIndex === questions.length - 1;
+      
+      return {
+        ...prev,
+        currentQuestionIndex: isLastQuestion 
+          ? prev.currentQuestionIndex 
+          : prev.currentQuestionIndex + 1,
+        isFinished: isLastQuestion,
+        timeLeft: isLastQuestion ? prev.timeLeft : 30
+      };
+    });
+  };
+
+  const handleRestart = () => {
+    setQuizState({
+      currentQuestionIndex: 0,
+      score: 0,
+      isFinished: false,
+      timeLeft: 30
+    });
+  };
+
+  if (quizState.isFinished) {
+    return (
+      <Results 
+        score={quizState.score} 
+        totalQuestions={questions.length} 
+        onRestart={handleRestart} 
+      />
+    );
+  }
+
   return (
-    <CartProvider>
-      <div className="min-h-screen bg-background p-6">
-        <div className="max-w-7xl mx-auto">
-          <div className="flex justify-between items-center mb-8">
-            <h1 className="text-3xl font-bold">Syrian Market</h1>
-            <CartButton />
-          </div>
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
-            {products.map((product) => (
-              <ProductCard key={product.id} product={product} />
-            ))}
-          </div>
-        </div>
-      </div>
-    </CartProvider>
+    <QuestionCard 
+      question={questions[quizState.currentQuestionIndex]}
+      onAnswer={handleAnswer}
+      timeLeft={quizState.timeLeft}
+      questionNumber={quizState.currentQuestionIndex + 1}
+      totalQuestions={questions.length}
+    />
   );
 };
 
